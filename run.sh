@@ -6,7 +6,7 @@
 # ./run.sh selectDelphes.C PhaseII/Configuration4v2 LL-4p-0-100-v1510_14TEV LL-4p-0-100-v1510_14TEV_100005594_PhaseII_Conf4v2_140PileUp.root 1341.36923 /afs/cern.ch/work/k/klawhorn/SnowmassSamples
 #
 # example lxbtch command
-# bsub -q 8nh -W 120 run.sh selectDelphes.C PhaseII/Configuration4v2 LL-4p-0-100-v1510_14TEV LL-4p-0-100-v1510_14TEV_100005594_PhaseII_Conf4v2_140PileUp.root 1341.36923 /afs/cern.ch/work/k/klawhorn/SnowmassSamples
+# bsub -q 8nh -W 450 run.sh vbf-bbbb_final0.C+\(\"tt\"\)
 #
 # Jay Lawhorn 11/4/13
 #---------------------------------------------------------------------------------------------------
