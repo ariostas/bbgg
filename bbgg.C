@@ -3,11 +3,12 @@
  * 
  * This macro analyses bbgg signal and background samples.
  * More specifically, it analyses the ttH and ZH backgrounds.
- * To run use "root bbgg.C"
+ * To run use root bbgg.C+\(\"name of background\"\)
  * 
- * The event selection consists in requiring a leading photon with pt > 40,
- * and a subleading photon with pt > 25, both with |eta| < 2.5.
- * It also requires two btagged jets with pt > 30 and |eta| < 2.4.
+ * The event selection consists in requiring a leading photon with pt > 90,
+ * and a subleading photon with pt > 40, both with |eta| < 2.5.
+ * It also requires two btagged jets with |eta| < 2.4, the leading
+ * bjet with pt > 60 and the subleading with pt > 40.
  * Finally it requires no reconstructed leptons and less than four jets
  * with pt > 30 and |eta| < 2.5
  * 
@@ -17,7 +18,8 @@
  * The kinematic cut requires deltaR_gg < 2, deltaR_bb < 2 and that
  * min(deltaR_bg) > 1.5
  * 
- * The mass cut requires 120 < M_gg < 130 and 105 < M_bb < 145
+ * The mass cut requires 120 < M_gg < 130,  105 < M_bb < 145
+ * and 300 < M_HH < 900
  * 
  * Coded by: Andres Rios
  */
@@ -47,6 +49,8 @@
 // Declare variables
 const bool Signal=true, Background=false;
 
+int puJetID( Float_t eta, Float_t meanSqDeltaR, Float_t betastar);
+
 TString BackgroundSample;
 
 // Declare functions
@@ -65,13 +69,12 @@ TH1D *hdRPhotonsS = new TH1D("hdRPhotonsS", "hdRPhotonsS", 25, 0, 5);				TH1D *h
 TH1D *hdRBJetsS = new TH1D("hdRBJetsS", "hdRBJetsS", 25, 0, 5);						TH1D *hdRBJetsB = new TH1D("hdRBJetsB", "hdRBJetsB", 25, 0, 5);
 TH1D *hdRPhotonBJetS = new TH1D("hdRPhotonBJetS", "hdRPhotonBJetS", 25, 0, 5);		TH1D *hdRPhotonBJetB = new TH1D("hdRPhotonBJetB", "hdRPhotonBJetB", 25, 0, 5);
 TH1D *hmPhotonsS = new TH1D("hmPhotonsS", "hmPhotonsS", 25, 100, 150);				TH1D *hmPhotonsB = new TH1D("hmPhotonsB", "hmPhotonsB", 25, 100, 150);
-TH1D *hmBJetsS = new TH1D("hmBJetsS", "hmBJetsS", 50, 70, 170);						TH1D *hmBJetsB = new TH1D("hmBJetsB", "hmBJetsB", 50, 70, 170);
-TH1D *hPhotonIsoS = new TH1D("hPhotonIsoS", "hPhotonIsoS", 50, -5, 25);				TH1D *hPhotonIsoB = new TH1D("hPhotonIsoB", "hPhotonIsoB", 50, -5, 25);
+TH1D *hmBJetsS = new TH1D("hmBJetsS", "hmBJetsS", 250, -5, 5);						TH1D *hmBJetsB = new TH1D("hmBJetsB", "hmBJetsB", 250, -5, 5);
 
 
 // Set up variables for event yields
-Double_t selectionSignal=0, kinCutSignal=0, massCutSignal=0;
-Double_t selectionBackground=0, kinCutBackground=0, massCutBackground=0;
+Double_t totalSignal=0, selectionSignal=0, kinCutSignal=0, massCutSignal=0;
+Double_t totalBackground=0, selectionBackground=0, kinCutBackground=0, massCutBackground=0;
 
 Double_t errorSelectionSignal=0, errorKinCutSignal=0, errorMassCutSignal=0;
 Double_t errorSelectionBackground=0, errorKinCutBackground=0, errorMassCutBackground=0;
@@ -192,6 +195,87 @@ void bbgg(TString backgroundSample){
 		cout << "Processing only signal events" << endl;
 	}
 	
+	else if(BackgroundSample == "all"){
+		
+		// Analyze B background
+		analyze("B-4p-0-1-v1510_14TEV", 200944.68129*1000, Background);
+
+		// Analyse BB background
+		analyze("BB-4p-0-300-v1510_14TEV", 249.97710*1000, Background);
+		analyze("BB-4p-300-700-v1510_14TEV", 35.23062*1000, Background);
+		analyze("BB-4p-700-1300-v1510_14TEV", 4.13743*1000, Background);
+		analyze("BB-4p-1300-2100-v1510_14TEV", 0.41702*1000, Background);
+		analyze("BB-4p-2100-100000-v1510_14TEV", 0.04770*1000, Background);
+
+		// Analyze BBB background
+		analyze("BBB-4p-0-600-v1510_14TEV", 2.57304*1000, Background);
+		analyze("BBB-4p-600-1300-v1510_14TEV", 0.14935*1000, Background);
+		analyze("BBB-4p-1300-100000-v1510_14TEV", 0.01274*1000, Background);
+
+		// Analyze Bj background
+		analyze("Bj-4p-0-300-v1510_14TEV", 34409.92339*1000, Background);
+		analyze("Bj-4p-300-600-v1510_14TEV", 2642.85309*1000, Background);
+		analyze("Bj-4p-600-1100-v1510_14TEV", 294.12311*1000, Background);
+		analyze("Bj-4p-1100-1800-v1510_14TEV", 25.95000*1000, Background);
+		analyze("Bj-4p-1800-2700-v1510_14TEV", 2.42111*1000, Background);
+		analyze("Bj-4p-2700-3700-v1510_14TEV", 0.22690*1000, Background);
+		analyze("Bj-4p-3700-100000-v1510_14TEV", 0.02767*1000, Background);
+
+		// Analyze Bjj-vbf background
+		analyze("Bjj-vbf-4p-0-700-v1510_14TEV", 86.45604*1000, Background);
+		analyze("Bjj-vbf-4p-700-1400-v1510_14TEV", 4.34869*1000, Background);
+		analyze("Bjj-vbf-4p-1400-2300-v1510_14TEV", 0.32465*1000, Background);
+		analyze("Bjj-vbf-4p-2300-3400-v1510_14TEV", 0.03032*1000, Background);
+		//analyze("Bjj-vbf-4p-3400-100000-v1510_14TEV", 0.00313*1000, Background);
+
+		// Analyze H background
+		analyze("H-4p-0-300-v1510_14TEV", 21.55990*1000, Background);
+		analyze("H-4p-300-800-v1510_14TEV", 1.11282*1000, Background);
+		analyze("H-4p-800-1500-v1510_14TEV", 0.09188*1000, Background);
+		analyze("H-4p-1500-100000-v1510_14TEV", 0.01009*1000, Background);
+
+		// Analyze LL background
+		analyze("LL-4p-0-100-v1510_14TEV", 1341.36923*1000, Background);
+		analyze("LL-4p-100-200-v1510_14TEV", 156.29534*1000, Background);
+		analyze("LL-4p-200-500-v1510_14TEV", 42.40132*1000, Background);
+		analyze("LL-4p-500-900-v1510_14TEV", 2.84373*1000, Background);
+		analyze("LL-4p-900-1400-v1510_14TEV", 0.20914*1000, Background);
+		analyze("LL-4p-1400-100000-v1510_14TEV", 0.02891*1000, Background);
+
+		// Analyze LLB background
+		analyze("LLB-4p-0-400-v1510_14TEV", 2.97380*1000, Background);
+		//analyze("LLB-4p-400-900-v1510_14TEV", 0.22854*1000, Background);
+		analyze("LLB-4p-900-100000-v1510_14TEV", 0.02080*1000, Background);
+
+		// Analyze tB background
+		analyze("tB-4p-0-500-v1510_14TEV", 63.88923*1000, Background);
+		analyze("tB-4p-500-900-v1510_14TEV", 7.12172*1000, Background);
+		analyze("tB-4p-900-1500-v1510_14TEV", 0.98030*1000, Background);
+		analyze("tB-4p-1500-2200-v1510_14TEV", 0.08391*1000, Background);
+		analyze("tB-4p-2200-100000-v1510_14TEV", 0.00953*1000, Background);
+
+		// Analyze tj background
+		analyze("tj-4p-0-500-v1510_14TEV", 109.73602*1000, Background);
+		analyze("tj-4p-500-1000-v1510_14TEV", 5.99325*1000, Background);
+		analyze("tj-4p-1000-1600-v1510_14TEV", 0.37680*1000, Background);
+		analyze("tj-4p-1600-2400-v1510_14TEV", 0.03462*1000, Background);
+		analyze("tj-4p-2400-100000-v1510_14TEV", 0.00312*1000, Background);
+
+		// Analyse tt background
+		analyze("tt-4p-0-600-v1510_14TEV", 530.89358*1000, Background);
+		analyze("tt-4p-600-1100-v1510_14TEV", 42.55351*1000, Background);
+		analyze("tt-4p-1100-1700-v1510_14TEV", 4.48209*1000, Background);
+		analyze("tt-4p-1700-2500-v1510_14TEV", 0.52795*1000, Background);
+		analyze("tt-4p-2500-100000-v1510_14TEV", 0.05449*1000, Background);
+
+		// Analyze ttB background
+		analyze("ttB-4p-0-900-v1510_14TEV", 2.6673*1000, Background);
+		analyze("ttB-4p-900-1600-v1510_14TEV", 0.250469*1000, Background);
+		analyze("ttB-4p-1600-2500-v1510_14TEV", 0.0237441*1000, Background);
+		analyze("ttB-4p-2500-100000-v1510_14TEV", 0.00208816*1000, Background);
+		
+	}
+	
 	else {
 		cout << "Background sample not found" << endl;
 		assert(false);
@@ -216,159 +300,36 @@ void analyze(TString inputfile, Double_t crossSection, bool SorB)
 	
 	Double_t tempErrorSelection=0, tempErrorKinCut=0, tempErrorMassCut=0;
 	
-	const TString inputFilet = inputfile + ".txt";
-	ifstream ifs(inputFilet);
-
-	assert(ifs.is_open());
-
-	TString filename;
+	const TString inputFile = "/afs/cern.ch/work/a/ariostas/public/bbgg/" + inputfile + ".root";
 	
-	cout << "Reading from folder " << inputfile << endl;
-
-	TChain chain("Delphes");
-
-	while(ifs >> filename){
-		
-		TString filenamef;
-		if(SorB) filenamef = "root://eoscms.cern.ch//store/group/phys_higgs/upgrade/PhaseII/Configuration4v2/140PileUp/" + inputfile + "/" + filename;
-		else filenamef = "root://eoscms.cern.ch//store/group/upgrade/delphes/ProdJun14/" + inputfile + "/" + filename;
-		
-		cout << "Reading " << filenamef << endl;
-		chain.Add(filenamef);
-	}
-	
-	ExRootTreeReader *treeReader = new ExRootTreeReader(&chain);
-	Long64_t numberOfEntries = treeReader->GetEntries();
-	
-	// Set up loop variables
-	GenParticle *particle;
-	Photon *photon;
-	Jet *jet;
+	cout << "Reading from file " << inputfile << endl;
 	
 	// Set up storage variables
-	Int_t nPhoton1, nPhoton2, nbJet1, nbJet2;
-	Photon *photon1, *photon2;
-	Jet *bJet1, *bJet2;
-	LHEFEvent *event;
+	Photon *photon1=0, *photon2=0;
+	Jet *bJet1=0, *bJet2=0;
 	UInt_t nJets, nLeptons; 
 	Double_t weight, dRPhotons, dRBJets, dRPhotonBJet;
-	TLorentzVector vPhoton1, vPhoton2, vBJet1, vBJet2, photonSystem, bJetSystem;
-	
-	
-	TClonesArray *branchPhoton = treeReader->UseBranch("Photon");
-	TClonesArray *branchElectron = treeReader->UseBranch("Electron");
-	TClonesArray *branchMuon = treeReader->UseBranch("Muon");
-	TClonesArray *branchJet = treeReader->UseBranch("Jet");
-	TClonesArray *branchParticle = treeReader->UseBranch("Particle");
-	TClonesArray *branchEvent;
-	//((!SorB) && (BackgroundSample != "tt") ? branchEvent = treeReader->UseBranch("Event"): branchEvent = 0);
-			
-	for (Long64_t iEntry=0; iEntry<numberOfEntries; iEntry++) { // Event loop
-		treeReader->ReadEntry(iEntry);		
-			
-		// Reset index variables
-		nPhoton1=nPhoton2=nbJet1=nbJet2=-1;
-		
-		// Store the number of leptons
-		nLeptons = branchElectron->GetEntries() + branchMuon->GetEntries();
-		nJets = 0;
-			
-		// Select photons
-		for (Int_t iPhoton=0; iPhoton<branchPhoton->GetEntries(); iPhoton++) { // Photon loop
-			photon = (Photon*) branchPhoton->At(iPhoton);
-		
-			(SorB ? hPhotonIsoS : hPhotonIsoB)->Fill(photon->IsolationVar);
-		
-			if((photon->PT > 25) && (fabs(photon->Eta) < 2.5)){
-				
-				if(nPhoton1 == -1){
-					
-					nPhoton1 = iPhoton;
-					photon1 = (Photon*) branchPhoton->At(nPhoton1);
-					
-				}
-				else if(photon->PT > photon1->PT){
-										
-					nPhoton2 = nPhoton1;
-					photon2 = (Photon*) branchPhoton->At(nPhoton2);
-				
-					nPhoton1 = iPhoton;
-					photon1 = (Photon*) branchPhoton->At(nPhoton1);
-				
-				}
-				else if(nPhoton2 == -1){
-				
-					nPhoton2 = iPhoton;
-					photon2 = (Photon*) branchPhoton->At(nPhoton2);
-				
-				}
-				else if(photon->PT > photon2->PT){
-				
-					nPhoton2 = iPhoton;
-					photon2 = (Photon*) branchPhoton->At(nPhoton2);
-				
-				}
-				
-			}
-			
-		}// End photon loop
+	TLorentzVector vPhoton1, vPhoton2, vBJet1, vBJet2, photonSystem, bJetSystem, diHiggsSystem;
 
-		// Select bjets and count jets
-		for (Int_t iJet=0; iJet<branchJet->GetEntries(); iJet++) { // bjet loop
-			jet = (Jet*) branchJet->At(iJet);
+	TFile* infile = new TFile(inputFile); assert(infile);
+	TTree* intree = (TTree*) infile->Get("Events"); assert(intree);
+
+	intree->SetBranchAddress("weight",		&weight);
+	intree->SetBranchAddress("nJets",			&nJets);
+	intree->SetBranchAddress("nLeptons",		&nLeptons);
+	intree->SetBranchAddress("photon1",		&photon1);
+	intree->SetBranchAddress("photon2",		&photon2);
+	intree->SetBranchAddress("bJet1",          &bJet1);
+	intree->SetBranchAddress("bJet2",          &bJet2);
+
 			
-			if ((fabs(jet->Eta)<2.5) && (jet->PT > 30)) nJets++;
-		
-			if((jet->BTag) && (jet->PT > 30) && (fabs(jet->Eta) < 2.4)){
-				if(nbJet1 == -1){
-					nbJet1 = iJet;
-					bJet1 = (Jet*) branchJet->At(nbJet1);
-				}
-				else if(jet->PT > bJet1->PT){
-				
-					nbJet2 = nbJet1;
-					bJet2 = (Jet*) branchJet->At(nbJet2);
-				
-					nbJet1 = iJet;
-					bJet1 = (Jet*) branchJet->At(nbJet1);
-				
-				}
-				else if(nbJet2 == -1){
-				
-					nbJet2 = iJet;
-					bJet2 = (Jet*) branchJet->At(nbJet2);
-				
-				}
-				else if(jet->PT > bJet2->PT){
-				
-					nbJet2 = iJet;
-					bJet2 = (Jet*) branchJet->At(nbJet2);
-				
-				}
-				
-			}
-			
-		}// End bjet loop
-		
-		weight = 1;
-		/*if(!SorB){
-						
-			event = (LHEFEvent*) branchEvent->At(0);
-			weight = event->Weight;
-						
-		}*/
+	for (Long64_t iEntry=0; iEntry<intree->GetEntries(); iEntry++) { // Event loop
+		intree->GetEntry(iEntry);
 
 		(SorB ? hnLeptonsS : hnLeptonsB)->Fill(nLeptons, weight);
 		(SorB ? hnJetsS : hnJetsB)->Fill(nJets, weight);
-
-		// Check if there are two selected photons and bjets
-		if(!((nPhoton1!=-1) && (nPhoton2!=-1) && (nbJet1!=-1) && (nbJet2!=-1))) continue;
 		
-		(SorB ? hPhotonIsoS : hPhotonIsoB)->Fill(photon1->IsolationVar, weight);
-		(SorB ? hPhotonIsoS : hPhotonIsoB)->Fill(photon2->IsolationVar, weight);
-		
-		
-		if(!((photon1->PT > 40) && (nLeptons == 0) && (nJets < 4))) continue;
+		if(!((photon1->PT > 90) && (photon2->PT > 40) && (bJet1->PT > 60) && (bJet2->PT > 40) && (nLeptons == 0) && (nJets < 4))) continue;
 			
 		// Set up four-vectors
 		vPhoton1.SetPtEtaPhiE(photon1->PT, photon1->Eta, photon1->Phi, photon1->E);
@@ -379,11 +340,13 @@ void analyze(TString inputfile, Double_t crossSection, bool SorB)
 		photonSystem = vPhoton1 + vPhoton2;
 		bJetSystem = vBJet1 + vBJet2;
 		
+		diHiggsSystem = vPhoton1 + vPhoton2 + vBJet1 + vBJet2;
+		
 		// Check for fit mass window requirements
 		if((photonSystem.M() > 120) && (photonSystem.M() < 130) && (bJetSystem.M() > 70) && (bJetSystem.M() < 200)){
 					
 			tempSelection += weight;
-			tempErrorSelection += weight*weight;
+			tempErrorSelection++;
 		}
 		
 		// Calculate all required deltaRs
@@ -410,31 +373,31 @@ void analyze(TString inputfile, Double_t crossSection, bool SorB)
 		if(!(dRBJets < 2)) continue;
 		
 		(SorB ? hmPhotonsS : hmPhotonsB)->Fill(photonSystem.M(), weight);
-		(SorB ? hmBJetsS : hmBJetsB)->Fill(bJetSystem.M(), weight);
+		(SorB ? hmBJetsS : hmBJetsB)->Fill(diHiggsSystem.M(), weight);
 		
 		if(!((photonSystem.M() > 120) && (photonSystem.M() < 130) && (bJetSystem.M() > 70) && (bJetSystem.M() < 200))) continue;
 					
 		tempKinCut += weight;
-		tempErrorKinCut += weight*weight;
+		tempErrorKinCut++;
 	
 		// Check for mass cut requirement
-		if(!((bJetSystem.M() > 105) && (bJetSystem.M() < 145))) continue;
+		if(!((bJetSystem.M() > 105) && (bJetSystem.M() < 145) && (diHiggsSystem.M() > 300) && (diHiggsSystem.M() < 900))) continue;
 		
 		tempMassCut += weight;
-		tempErrorMassCut += weight*weight;
+		tempErrorMassCut++;
 		
 	} // end event loop
 	
 	// Update global event yield variables
-	(SorB ? selectionSignal : selectionBackground) += crossSection*3000*tempSelection/numberOfEntries;
-	(SorB ? kinCutSignal : kinCutBackground) += crossSection*3000*tempKinCut/numberOfEntries;
-	(SorB ? massCutSignal : massCutBackground) += crossSection*3000*tempMassCut/numberOfEntries;
+	(SorB ? totalSignal : totalBackground) += 3000*crossSection;
+	(SorB ? selectionSignal : selectionBackground) += tempSelection;
+	(SorB ? kinCutSignal : kinCutBackground) += tempKinCut;
+	(SorB ? massCutSignal : massCutBackground) += tempMassCut;
 	
-	(SorB ? errorSelectionSignal : errorSelectionBackground) += crossSection*3000*sqrtf(tempErrorSelection)/numberOfEntries;
-	(SorB ? errorKinCutSignal : errorKinCutBackground) += crossSection*3000*sqrtf(tempErrorKinCut)/numberOfEntries;
-	(SorB ? errorMassCutSignal : errorMassCutBackground) += crossSection*3000*sqrtf(tempErrorMassCut)/numberOfEntries;
+	(SorB ? errorSelectionSignal : errorSelectionBackground) += sqrtf(tempErrorSelection)*weight;
+	(SorB ? errorKinCutSignal : errorKinCutBackground) += sqrtf(tempErrorKinCut)*weight;
+	(SorB ? errorMassCutSignal : errorMassCutBackground) += sqrtf(tempErrorMassCut)*weight;
 
-	ifs.close();
 }
 
 /*
@@ -454,14 +417,15 @@ void saveResults(){
 	histogram(hdRPhotonBJetS, hdRPhotonBJetB, c1, "min delta R of Photon and BJet", "Count", "./Histograms/histogramdRPBJ_" + BackgroundSample + ".jpg");
 	histogram(hmPhotonsS, hmPhotonsB, c1, "Reconstructed mass from Photons", "Count", "./Histograms/histogramdmP_" + BackgroundSample + ".jpg");
 	histogram(hmBJetsS, hmBJetsB, c1, "Reconstructed mass from BJets", "Count", "./Histograms/histogramdmBJ_" + BackgroundSample + ".jpg");
-	histogram(hPhotonIsoS, hPhotonIsoB, c1, "Photon isolation variable", "Count", "./Histograms/histogramPhotonIso_" + BackgroundSample + ".jpg");
 	
 	cout << "\nSignal\n" << endl;
+	cout << "Total Events " << totalSignal << endl;
 	cout << "Events after selection and mass window: " << selectionSignal << " +- " << errorSelectionSignal << endl;
 	cout << "Events after kinematic cut: " << kinCutSignal << " +- " << errorKinCutSignal << endl;
 	cout << "Events after mass cut: " << massCutSignal << " +- " << errorMassCutSignal << endl;
 	
 	cout << "\n\n" << BackgroundSample << " Background\n" << endl;
+	cout << "Total Events " << totalBackground << endl;
 	cout << "Events after selection and mass window: " << selectionBackground << " +- " << errorSelectionBackground << endl;
 	cout << "Events after kinematic cut: " << kinCutBackground << " +- " << errorKinCutBackground << endl;
 	cout << "Events after mass cut: " << massCutBackground << " +- " << errorMassCutBackground << endl;
@@ -481,9 +445,9 @@ void saveResultsS(){
 	histogram(hdRPhotonBJetS, c1, "min delta R of Photon and BJet", "Count", "./Histograms/histogramdRPBJ_Signal.jpg");
 	histogram(hmPhotonsS, c1, "Reconstructed mass from Photons", "Count", "./Histograms/histogramdmP_Signal.jpg");
 	histogram(hmBJetsS, c1, "Reconstructed mass from BJets", "Count", "./Histograms/histogramdmBJ_Signal.jpg");
-	histogram(hPhotonIsoS, c1, "Photon isolation variable", "Count", "./Histograms/histogramPhotonIso_Signal.jpg");
 	
 	cout << "\nSignal\n" << endl;
+	cout << "Total Events " << totalSignal << endl;
 	cout << "Events after selection and mass window: " << selectionSignal << " +- " << errorSelectionSignal << endl;
 	cout << "Events after kinematic cut: " << kinCutSignal << " +- " << errorKinCutSignal << endl;
 	cout << "Events after mass cut: " << massCutSignal << " +- " << errorMassCutSignal << endl;
@@ -515,8 +479,8 @@ void histogram(TH1D *histoS, TH1D *histoB, TCanvas *can, const char* xTitle, con
 	histoB->Scale(nB);
 	
 	Double_t max;
-	if((histoS->GetMaximum()) > (histoB->GetMaximum())){max=1.1*(histoS->GetMaximum());}
-	else if((histoS->GetMaximum()) <= (histoB->GetMaximum())){max=1.1*(histoB->GetMaximum());}
+	if((histoS->GetMaximum()) > (histoB->GetMaximum())) max=1.1*(histoS->GetMaximum());
+	else max=1.1*(histoB->GetMaximum());
 	
 	histoS->SetMaximum(max);
 	histoB->SetMaximum(max);
@@ -551,4 +515,38 @@ void histogram(TH1D *histo, TCanvas *can, const char* xTitle, const char* yTitle
 	histo->SetTitle(""); // title on top
 
 	can->SaveAs(name);
+}
+
+int puJetID( Float_t eta, Float_t meanSqDeltaR, Float_t betastar) {
+  
+	Float_t MeanSqDeltaRMaxBarrel=0.07;
+	Float_t BetaMinBarrel=0.87;
+	Float_t MeanSqDeltaRMaxEndcap=0.07;
+	Float_t BetaMinEndcap=0.85;
+
+	//cout << eta << ", " << meanSqDeltaR << ", " << betastar << ": ";
+
+	if (fabs(eta)<1.5) {
+		if ((meanSqDeltaR<MeanSqDeltaRMaxBarrel)&&(betastar<BetaMinBarrel)) {
+			//cout << "barrel 0" << endl;
+			return 0;
+		}
+		else {
+			//cout << "barrel 1" << endl;
+			return 1;
+		}
+	}
+	else if (fabs(eta)<4.0) {
+		if ((meanSqDeltaR<MeanSqDeltaRMaxEndcap)&&(betastar<BetaMinEndcap)) {
+			//cout << "endcap 0" << endl;
+			return 0;
+		}
+		else {
+			//cout << "endcap 1" << endl;
+			return 1;
+		}
+	}
+	//cout << "forward 1" << endl;
+	return 1;
+
 }
