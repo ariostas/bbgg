@@ -1,8 +1,16 @@
 #!/bin/bash
 #------------------------------------------------------------
-# Merge all ntuples
+# Submit a batch of jobs to lxbtch
 #
-# Use the following command: ./mergeAllFiles.sh xsec.txt
+# example command:
+#             root_script     conf_file output_location
+# ./submit.sh selectDelphes.C xsec.txt  /afs/cern.ch/work/a/ariostas/private/HHToGGBB/
+# 
+# conf_file has format (no leading "#")
+# sample_type cross_section
+#
+# Note: conf file needs empty last line... clunky I know.
+# Jay Lawhorn 11/4/13
 #------------------------------------------------------------
 
   conf_file=$1

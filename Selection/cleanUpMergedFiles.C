@@ -4,7 +4,7 @@
 // execute with:
 // root -l -q cleanUpMergedFiles(_infile_, _outfile_)
 //
-// Code based on Jay Lawhorn 11/4/13
+// Jay Lawhorn 11/4/13
 //-------------------------------------------------------------------
 #if !defined(__CINT__) || defined(__MAKECINT__)
 #include <TROOT.h>
